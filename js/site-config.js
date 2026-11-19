@@ -27,7 +27,7 @@
     heroTitle2: '让BanPick更便捷。',
 
     // 改成你的仓库地址，例如 https://github.com/yourname/csbp-online
-    githubUrl: 'https://github.com/',
+    githubUrl: 'https://github.com/GGHePinGG/CS-BanPick-TOOL',
     githubLabel: 'GitHub'
   };
 })();
