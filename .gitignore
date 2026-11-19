@@ -1,0 +1,13 @@
+# 依赖
+server/node_modules/
+
+# 开发过程产物
+.screenshots/
+.trae-html-share-packages/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

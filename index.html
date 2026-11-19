@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#eef2f8" />
+  <meta name="description" content="CS2 自定义 BP 工具：在线房间或单机模式，配置图池、随机队长、蛇形选人、BO1/BO3/BO5 地图 BP，一键复制战报。" />
+  <title>CS2 在线 BP · 队长选人</title>
+  <script>
+    (function () {
+      try {
+        if (window.localStorage.getItem('csbp.theme.v1') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css?v=20261119h" />
+</head>
+<body>
+  <div class="bg-layer" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <button class="brand" type="button" data-action="go-home" aria-label="回到首页">
+      <span class="brand-mark" data-site="brand-mark">CS</span>
+      <span class="brand-text" data-site="brand-text">BP ARENA</span>
+    </button>
+    <div class="topbar-right">
+      <span class="mode-tag" id="modeTag"><i></i><span id="modeText">本地模式</span></span>
+      <a class="github-link" id="githubLink" href="#" target="_blank" rel="noopener noreferrer" aria-label="打开 GitHub 仓库">
+        <i data-lucide="github"></i><span>GitHub</span>
+      </a>
+      <button class="theme-switch" type="button" id="themeToggle" data-action="toggle-theme" aria-label="切换白天 / 夜晚模式" aria-pressed="true">
+        <span class="theme-switch-icon" data-opt="light" aria-hidden="true"><i data-lucide="sun"></i></span>
+        <span class="theme-switch-icon" data-opt="dark" aria-hidden="true"><i data-lucide="moon"></i></span>
+        <span class="theme-switch-thumb" aria-hidden="true"></span>
+      </button>
+      <button class="btn ghost sm" type="button" data-action="reset-all">清空重开</button>
+    </div>
+  </header>
+
+  <main id="app" class="wrap" aria-live="polite"></main>
+
+  <div id="toast" class="toast-host" aria-live="assertive"></div>
+
+  <noscript>本工具需要启用 JavaScript 才能运行。</noscript>
+
+  <script src="js/site-config.js?v=20261119h"></script>
+  <script src="js/active-maps.js?v=20261119h"></script>
+  <script src="js/maps.js?v=20261119h"></script>
+  <script src="js/draft.js?v=20261119h"></script>
+  <script src="js/mapbp.js?v=20261119h"></script>
+  <script src="js/share.js?v=20261119h"></script>
+  <script src="js/state.js?v=20261119h"></script>
+  <script src="js/vendor/peerjs.min.js"></script>
+  <script src="js/vendor/lucide.min.js"></script>
+  <script src="js/net.js?v=20261119h"></script>
+  <script src="js/app.js?v=20261119h"></script>
+</body>
+</html>
