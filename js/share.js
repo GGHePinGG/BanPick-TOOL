@@ -43,7 +43,7 @@
     });
 
     lines.push('--------------------------------');
-    lines.push('由 CS2 BP ARENA 生成');
+    lines.push('由 球球 生成');
     return lines.join('\n');
   }
 
