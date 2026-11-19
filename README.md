@@ -1,5 +1,6 @@
-# CS2 BP TOOL BanPick工具
 
+# CS2 BP TOOL BanPick工具
+这是一个 Vibe Coding 出来的 小工具。如果遇到使用问题请您在 Issue 里 与我反馈！
 CS2 在线 BanPick / 队长选人工具。纯静态网页，零构建，原生 HTML / CSS / JavaScript，支持本地单机、同一浏览器多标签联机以及跨设备 P2P 联机。
 
 ## 功能
