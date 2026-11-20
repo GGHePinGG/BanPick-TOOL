@@ -48,7 +48,7 @@
     heroTitle1: '在线 <span class="grad">CS2 BanPick</span>',
     heroTitle2: '让BanPick更便捷。',
     heroTitle1En: 'Online <span class="grad">CS2 BanPick</span>',
-    heroTitle2En: 'BanPick made simple.',
+    heroTitle2En: 'Make BanPick Easier.',
 
     // 各游戏首页标题；不配置时使用 heroTitle1 / heroTitle2
     heroTitles: {
@@ -64,7 +64,7 @@
     heroTitleNoneEn: ['Online <span class="grad">BanPick</span>', 'CS2 · VALORANT'],
 
     // 改成你的仓库地址，例如 https://github.com/yourname/csbp-online
-    githubUrl: 'https://github.com/GGHePinGG/CS-BanPick-TOOL',
+    githubUrl: 'https://github.com/GGHePinGG/BanPick-TOOL',
     githubLabel: 'GitHub'
   };
 })();
