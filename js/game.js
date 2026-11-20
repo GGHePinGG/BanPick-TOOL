@@ -16,7 +16,8 @@
     valorant: {
       id: 'valorant',
       label: 'VALORANT',
-      name: '无畏契约',
+      name: 'VALORANT',
+      nameZh: '无畏契约',
       maps: CSBP.ValorantMaps,
       active: CSBP.ValorantActive
     }

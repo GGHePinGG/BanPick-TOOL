@@ -3,6 +3,10 @@
 
   var CSBP = (window.CSBP = window.CSBP || {});
 
+  function L(zh, en) {
+    return CSBP.I18n ? CSBP.I18n.L(zh, en) : zh;
+  }
+
   var PREFIX = 'csbp-m2-';
   var CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   var CODE_LEN = 5;
@@ -187,13 +191,13 @@
 
   function friendlyError(err) {
     var type = err && err.type ? err.type : '';
-    if (type === 'peer-unavailable') return '房间不存在，或房主已经离开';
-    if (type === 'unavailable-id') return '房间码冲突，请重新创建';
-    if (type === 'browser-incompatible') return '当前浏览器不支持 WebRTC，无法联机';
+    if (type === 'peer-unavailable') return L('房间不存在，或房主已经离开', 'Room not found, or the host has left');
+    if (type === 'unavailable-id') return L('房间码冲突，请重新创建', 'Room code conflict, please create the room again');
+    if (type === 'browser-incompatible') return L('当前浏览器不支持 WebRTC，无法联机', 'This browser does not support WebRTC, so online play is unavailable');
     if (type === 'network' || type === 'server-error' || type === 'socket-error' || type === 'socket-closed') {
-      return '无法连接联机服务器，请检查网络后重试';
+      return L('无法连接联机服务器，请检查网络后重试', 'Cannot reach the online server. Check your network and try again');
     }
-    return '连接失败：' + (type || '未知错误');
+    return L('连接失败：', 'Connection failed: ') + (type || L('未知错误', 'unknown error'));
   }
 
   function info() {
@@ -342,13 +346,15 @@
 
     c.on('close', function () {
       if (mySession !== session) return;
-      var label = entry.side ? entry.side + ' 队长已离开房间' : '观战者已离开房间';
+      var label = entry.side
+        ? L('队伍 ' + entry.side + ' 队长已离开房间', 'Team ' + entry.side + ' captain left the room')
+        : L('观战者已离开房间', 'A spectator left the room');
       endConnection(label);
     });
 
     c.on('error', function () {
       if (mySession !== session) return;
-      endConnection('联机连接出现错误');
+      endConnection(L('联机连接出现错误', 'Online connection error'));
     });
   }
 
@@ -428,7 +434,7 @@
   }
 
   function startLocalHost() {
-    if (!hasLocal()) throw new Error('当前浏览器不支持本机联机');
+    if (!hasLocal()) throw new Error(L('当前浏览器不支持本机联机', 'This browser does not support local multi-tab play'));
     var roomCode = randomCode();
     var channel = new window.BroadcastChannel('csbp-local-' + roomCode);
     var mySession = session;
@@ -480,8 +486,8 @@
           window.clearTimeout(timer);
           try { p.destroy(); } catch (e) { /* ignore */ }
           if (peer === p) peer = null;
-          if (mySession !== session) { reject(new Error('已取消')); return; }
-          reject(new Error('创建房间超时，联机服务器不可达'));
+          if (mySession !== session) { reject(new Error(L('已取消', 'Cancelled'))); return; }
+          reject(new Error(L('创建房间超时，联机服务器不可达', 'Creating the room timed out; the online server is unreachable')));
         }, 8000);
 
         p.on('open', function () {
@@ -533,7 +539,7 @@
   function createRoom(getStateFn) {
     return new Promise(function (resolve, reject) {
       if (!supported()) {
-        reject(new Error('当前浏览器不支持联机'));
+        reject(new Error(L('当前浏览器不支持联机', 'This browser does not support online play')));
         return;
       }
 
@@ -545,7 +551,7 @@
 
       function useLocal(lastErr) {
         if (mySession !== session) {
-          reject(lastErr || new Error('已取消'));
+          reject(lastErr || new Error(L('已取消', 'Cancelled')));
           return;
         }
         if (peer) {
@@ -553,7 +559,7 @@
           peer = null;
         }
         if (!hasLocal()) {
-          reject(lastErr || new Error('当前浏览器不支持本机联机'));
+          reject(lastErr || new Error(L('当前浏览器不支持本机联机', 'This browser does not support local multi-tab play')));
           return;
         }
         // 联机服务器不可用时，自动回退到同一浏览器多标签联机
@@ -565,13 +571,13 @@
       }
 
       if (typeof window.Peer !== 'function') {
-        useLocal(new Error('当前浏览器不支持联机'));
+        useLocal(new Error(L('当前浏览器不支持联机', 'This browser does not support online play')));
         return;
       }
 
       probeRelay().then(function () {
         if (mySession !== session) {
-          reject(new Error('已取消'));
+          reject(new Error(L('已取消', 'Cancelled')));
           return;
         }
         var candidates = serverCandidates();
@@ -579,7 +585,7 @@
 
         function next(lastErr) {
           if (mySession !== session) {
-            reject(lastErr || new Error('已取消'));
+            reject(lastErr || new Error(L('已取消', 'Cancelled')));
             return;
           }
           if (idx >= candidates.length) {
@@ -590,7 +596,7 @@
           idx += 1;
           startPeerHost(mySession, cand.opts).then(function (res) {
             if (mySession !== session) {
-              reject(new Error('已取消'));
+              reject(new Error(L('已取消', 'Cancelled')));
               return;
             }
             res.server = cand.label;
@@ -627,7 +633,7 @@
       }
 
       c.on('open', function () {
-        if (mySession !== session) return finish(new Error('已取消'));
+        if (mySession !== session) return finish(new Error(L('已取消', 'Cancelled')));
         guestConnected = true;
         emitStatus();
         try { c.send({ t: 'hello', side: side, token: token }); } catch (e) { /* ignore */ }
@@ -649,25 +655,25 @@
       c.on('close', function () {
         if (mySession !== session) return;
         if (!done) {
-          finish(new Error('房主拒绝了连接'));
+          finish(new Error(L('房主拒绝了连接', 'The host rejected the connection')));
           return;
         }
         guestConnected = false;
         guestConn = null;
         emitStatus();
-        if (handlers.onDisconnect) handlers.onDisconnect('与房主的连接已断开', 'guest', guestSide);
+        if (handlers.onDisconnect) handlers.onDisconnect(L('与房主的连接已断开', 'The connection to the host was lost'), 'guest', guestSide);
       });
 
       c.on('error', function () {
         if (mySession !== session) return;
         if (!done) {
-          finish(new Error('无法连接到房主'));
+          finish(new Error(L('无法连接到房主', 'Cannot connect to the host')));
           return;
         }
         guestConnected = false;
         guestConn = null;
         emitStatus();
-        if (handlers.onDisconnect) handlers.onDisconnect('联机连接出现错误', 'guest', guestSide);
+        if (handlers.onDisconnect) handlers.onDisconnect(L('联机连接出现错误', 'Online connection error'), 'guest', guestSide);
       });
 
       // 本机联机的连接创建即已打开
@@ -689,7 +695,7 @@
         window.clearTimeout(timer);
         try { p.destroy(); } catch (e) { /* ignore */ }
         if (peer === p) peer = null;
-        reject(new Error('连接房主超时'));
+        reject(new Error(L('连接房主超时', 'Timed out connecting to the host')));
       }, 8000);
 
       p.on('open', function () {
@@ -701,7 +707,7 @@
           settled = true;
           window.clearTimeout(timer);
           try { p.destroy(); } catch (err) { /* ignore */ }
-          reject(new Error('无法建立连接'));
+          reject(new Error(L('无法建立连接', 'Cannot establish a connection')));
           return;
         }
 
@@ -736,7 +742,7 @@
       try {
         channel = new window.BroadcastChannel('csbp-local-' + roomCode);
       } catch (e) {
-        reject(new Error('当前浏览器不支持本机联机'));
+        reject(new Error(L('当前浏览器不支持本机联机', 'This browser does not support local multi-tab play')));
         return;
       }
 
@@ -749,7 +755,7 @@
         joined = true;
         try { channel.close(); } catch (e) { /* ignore */ }
         if (localChannel === channel) localChannel = null;
-        reject(new Error('房间不存在，或房主已经离开'));
+        reject(new Error(L('房间不存在，或房主已经离开', 'Room not found, or the host has left')));
       }, 2500);
 
       channel.onmessage = function (ev) {
@@ -774,7 +780,7 @@
           guestConnected = false;
           guestConn = null;
           emitStatus();
-          if (handlers.onDisconnect) handlers.onDisconnect('与房主的连接已断开', 'guest', guestSide);
+          if (handlers.onDisconnect) handlers.onDisconnect(L('与房主的连接已断开', 'The connection to the host was lost'), 'guest', guestSide);
         }
       };
 
@@ -786,11 +792,11 @@
     return new Promise(function (resolve, reject) {
       var roomCode = normalizeCode(inputCode);
       if (!supported()) {
-        reject(new Error('当前浏览器不支持联机'));
+        reject(new Error(L('当前浏览器不支持联机', 'This browser does not support online play')));
         return;
       }
       if (roomCode.length !== CODE_LEN) {
-        reject(new Error('房间码为 ' + CODE_LEN + ' 位字母或数字'));
+        reject(new Error(L('房间码为 ' + CODE_LEN + ' 位字母或数字', 'Room codes are ' + CODE_LEN + ' letters or digits')));
         return;
       }
 
@@ -809,7 +815,7 @@
 
       function fallbackLocal(peerErr) {
         if (mySession !== session) {
-          reject(peerErr || new Error('已取消'));
+          reject(peerErr || new Error(L('已取消', 'Cancelled')));
           return;
         }
         if (peer) {
@@ -822,7 +828,7 @@
         }
         guestConnected = false;
         if (!hasLocal()) {
-          reject(peerErr || new Error('无法连接联机服务器，请检查网络后重试'));
+          reject(peerErr || new Error(L('无法连接联机服务器，请检查网络后重试', 'Cannot reach the online server. Check your network and try again')));
           return;
         }
         // 联机服务器不可用时尝试同一浏览器多标签联机
@@ -833,28 +839,30 @@
         var localSession = session;
         startLocalGuest(localSession, roomCode, side, token).then(function () {
           if (localSession !== session) {
-            reject(new Error('已取消'));
+            reject(new Error(L('已取消', 'Cancelled')));
             return;
           }
           resolve();
         }).catch(function () {
           if (localSession !== session) {
-            reject(new Error('已取消'));
+            reject(new Error(L('已取消', 'Cancelled')));
             return;
           }
           teardown();
-          reject(new Error('无法加入房间：请确认房主在线；同一台电脑联机请先在项目目录运行 node server/peer-server.js 启动本地信令服务'));
+          reject(new Error(L(
+            '无法加入房间：请确认房主在线；同一台电脑联机请先在项目目录运行 node server/peer-server.js 启动本地信令服务',
+            'Cannot join the room: make sure the host is online. To play on the same computer, start the local signaling server first with node server/peer-server.js')));
         });
       }
 
       if (!usePeer) {
-        fallbackLocal(new Error('使用本机联机'));
+        fallbackLocal(new Error(L('使用本机联机', 'Using local multi-tab play')));
         return;
       }
 
       probeRelay().then(function () {
         if (mySession !== session) {
-          reject(new Error('已取消'));
+          reject(new Error(L('已取消', 'Cancelled')));
           return;
         }
         var candidates = serverCandidates();
@@ -863,7 +871,7 @@
 
         function next() {
           if (mySession !== session) {
-            reject(lastErr || new Error('已取消'));
+            reject(lastErr || new Error(L('已取消', 'Cancelled')));
             return;
           }
           if (idx >= candidates.length) {
@@ -874,7 +882,7 @@
           idx += 1;
           startPeerGuest(mySession, roomCode, side, token, cand.opts).then(function () {
             if (mySession !== session) {
-              reject(new Error('已取消'));
+              reject(new Error(L('已取消', 'Cancelled')));
               return;
             }
             resolve();
