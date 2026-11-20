@@ -93,7 +93,7 @@ HTTPS 页面需要使用 `wss` 信令（`peersecure=1`）。刷新页面会退�
 ├── js/
 │   ├── site-config.js      # 站点文案 / 品牌 / GitHub 链接配置
 │   ├── game.js             # 游戏注册表，切换 CS2 / VALORANT 地图库
-│   ├── active-maps.js      # CS2 现役地图清单
+│   ├── active-maps.js      # CS2 / VALORANT 现役地图清单
 │   ├── maps.js             # CS2 全部地图数据与查询
 │   ├── valorant-maps.js    # VALORANT 全部地图与现役七图
 │   ├── draft.js            # 蛇形选人顺序
@@ -129,19 +129,20 @@ HTTPS 页面需要使用 `wss` 信令（`peersecure=1`）。刷新页面会退�
 ### 地图数据
 
 - **CS2**：`js/maps.js` 维护全部 21 张地图，`js/active-maps.js` 维护现役七图。
-- **VALORANT**：`js/valorant-maps.js` 同时维护全部 13 张地图与现役七图。
+- **VALORANT**：`js/valorant-maps.js` 维护全部 13 张地图，`js/active-maps.js` 维护现役七图。
 
 现役地图数组顺序即展示顺序，`id` 必须与对应全部地图文件中的 `id` 一致。
 
-VALORANT 地图数据来源：[Riot 官方地图页](https://playvalorant.com/en-us/maps/) 与当前竞技图池（2026 年 V26 第六幕 / 13.08 补丁，7 张：Haven、Corrode、Bind、Sunset、Abyss、Lotus、Summit）。官方轮换新图时，更新 `js/valorant-maps.js` 中的 `MAPS` 与 `ACTIVE_IDS` 即可。
+VALORANT 地图数据来源：[Riot 官方地图页](https://playvalorant.com/en-us/maps/) 与当前竞技图池（2026 年 V26 第六幕 / 13.08 补丁，7 张：Haven、Corrode、Bind、Sunset、Abyss、Lotus、Summit）。官方轮换新图时，更新 `js/valorant-maps.js` 中的 `MAPS` 与 `js/active-maps.js` 中的 `VALORANT_ACTIVE_IDS` 即可。
 
-### 现役地图 `js/active-maps.js`（CS2）
+### 现役地图 `js/active-maps.js`（CS2 / VALORANT）
 
 ```js
-var ACTIVE_IDS = ['ancient', 'anubis', 'dust2', 'inferno', 'mirage', 'nuke', 'cache'];
+var CS2_ACTIVE_IDS = ['ancient', 'anubis', 'dust2', 'inferno', 'mirage', 'nuke', 'cache'];
+var VALORANT_ACTIVE_IDS = ['haven', 'corrode', 'bind', 'sunset', 'abyss', 'lotus', 'summit'];
 ```
 
-数组顺序即展示顺序，`id` 必须与 `js/maps.js` 中的地图 `id` 一致。
+数组顺序即展示顺序，`id` 必须分别与 `js/maps.js`、`js/valorant-maps.js` 中的地图 `id` 一致。
 
 ## 部署
 

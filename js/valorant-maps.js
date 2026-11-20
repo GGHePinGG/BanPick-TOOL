@@ -22,10 +22,6 @@
     { id: 'summit', cn: '天枢云阙', en: 'Summit', hue: 40 }
   ];
 
-  // 现役七图：2026 年 V26 第六幕竞技图池
-  // Haven / Corrode / Bind / Sunset / Abyss / Lotus / Summit
-  var ACTIVE_IDS = ['haven', 'corrode', 'bind', 'sunset', 'abyss', 'lotus', 'summit'];
-
   var MAP_BY_ID = {};
   MAPS.forEach(function (m) {
     MAP_BY_ID[m.id] = m;
@@ -35,17 +31,10 @@
     return MAP_BY_ID[id] || { id: id, cn: id, en: id, hue: 200 };
   }
 
+  // 现役七图统一维护在 js/active-maps.js 的 CSBP.ValorantActive 中
   CSBP.ValorantMaps = {
     MAPS: MAPS,
-    DEFAULT_POOL: ACTIVE_IDS.slice(),
+    DEFAULT_POOL: CSBP.ValorantActive.IDS.slice(),
     get: get
-  };
-
-  CSBP.ValorantActive = {
-    IDS: ACTIVE_IDS,
-    has: function (id) { return ACTIVE_IDS.indexOf(id) >= 0; },
-    list: function () {
-      return ACTIVE_IDS.map(function (id) { return get(id); });
-    }
   };
 })();
