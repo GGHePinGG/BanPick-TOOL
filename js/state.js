@@ -405,10 +405,9 @@
     save();
   }
 
-  // 图池校验：BO1 必须恰好 7 张，其余赛制至少 7 张
+  // 图池校验：所有赛制都必须恰好 7 张
   function poolReady() {
-    if (state.config.series === 1) return state.config.pool.length === 7;
-    return state.config.pool.length >= 7;
+    return state.config.pool.length === 7;
   }
 
   function startDraft() {

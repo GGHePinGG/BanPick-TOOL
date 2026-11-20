@@ -185,15 +185,12 @@
     return s.roll.A > s.roll.B ? 'A' : 'B';
   }
 
-  // 图池开局校验：BO1 需恰好 7 张，其余赛制至少 7 张
+  // 图池开局校验：所有赛制（BO1 / BO3 / BO5）都必须恰好 7 张
   function poolProblem(s) {
-    if (s.config.series === 1 && s.config.pool.length !== 7) {
-      return T('BO1 需要恰好 7 张地图才能开始', 'BO1 requires exactly 7 maps to start');
-    }
-    if (s.config.pool.length < 7) {
-      return T('图池至少需要 7 张地图才能开始', 'The map pool needs at least 7 maps to start');
-    }
-    return '';
+    var count = s.config.pool.length;
+    if (count === 7) return '';
+    return T('图池必须恰好 7 张地图才能开始 BP（当前 ' + count + ' 张）',
+      'The map pool must contain exactly 7 maps to start (currently ' + count + ')');
   }
 
   function stepDefsFor(config) {
@@ -410,7 +407,7 @@
 
           <div class="panel-head spaced">
             <h3>${T('地图池', 'Map pool')}</h3>
-            <span class="count ${count < 7 || (s.config.series === 1 && count !== 7) ? 'warn' : ''}">${count} ${T('张', 'maps')}</span>
+            <span class="count ${count !== 7 ? 'warn' : ''}">${count} ${T('张', 'maps')}</span>
           </div>
           <div class="pool-tools">
             <button class="btn tiny${s.config.poolMode === 'active' ? ' primary' : ''}" data-action="preset-pool" data-preset="active" ${guest ? 'disabled' : ''}>${T('现役七图', 'Active pool')}</button>
