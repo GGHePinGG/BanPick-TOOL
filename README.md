@@ -1,18 +1,19 @@
 
-# CS2 BP TOOL BanPick工具
+# CS2 / VALORANT BP TOOL BanPick工具
 这是一个 Vibe Coding 出来的 小工具。如果遇到使用问题请您在 Issue 里 与我反馈！
 
-CS2 在线 BanPick / 队长选人工具。纯静态网页，零构建，原生 HTML / CSS / JavaScript，支持本地单机、同一浏览器多标签联机以及跨设备 P2P 联机。
+CS2 与 VALORANT 通用的在线 BanPick / 队长选人工具。纯静态网页，零构建，原生 HTML / CSS / JavaScript，支持本地单机、同一浏览器多标签联机以及跨设备 P2P 联机。
 
 ## 功能
 
+- **游戏选择**：进入首页先选择 CS2 或 VALORANT，两个游戏共用同一套选人与 BP 流程。
 - **两种组队方式**：随机分组（随机两名队长 + 其余 8 人随机分队）或队长选人（蛇形选人，每队 1 名队长 + 4 名队员）。
 - **队长自行 Roll 点**：开启后由两位队长在各自设备上 Roll 1-100，点数大者先选人，并决定 BP 时先 BAN 还是后 BAN；平局自动重 Roll。
 - **赛制**：BO1 / BO3 / BO5，支持 BAN、PICK、选边、决胜图全流程。
-- **图池**：「现役七图」与「全部地图（21 张）」两种视图，现役地图只在 `js/active-maps.js` 中维护。
+- **图池**：「现役七图」与「全部地图」两种视图，现役地图随游戏切换。
 - **主题**：默认白天主题，右上角太阳 / 月亮开关切换，选择自动记忆。
 - **在线房间**：房主创建房间，生成 A / B 队长专属链接；队长只能操作自己的队伍，普通房间码加入为观战模式。
-- **战报**：BP 结束后可一键复制文字战报。
+- **战报**：BP 结束后可一键复制文字战报，标题按当前游戏生成。
 - **可配置站点**：品牌名、首页标题、GitHub 入口等在 `js/site-config.js` 中修改。
 
 ## 快速开始
@@ -90,8 +91,10 @@ HTTPS 页面需要使用 `wss` 信令（`peersecure=1`）。刷新页面会退�
 │   └── style.css           # 全部样式与白天 / 夜晚主题变量
 ├── js/
 │   ├── site-config.js      # 站点文案 / 品牌 / GitHub 链接配置
-│   ├── active-maps.js      # 现役地图清单（改地图只改这里）
-│   ├── maps.js             # 21 张地图数据与查询
+│   ├── game.js             # 游戏注册表，切换 CS2 / VALORANT 地图库
+│   ├── active-maps.js      # CS2 现役地图清单
+│   ├── maps.js             # CS2 全部地图数据与查询
+│   ├── valorant-maps.js    # VALORANT 全部地图与现役七图
 │   ├── draft.js            # 蛇形选人顺序
 │   ├── mapbp.js            # BO1 / BO3 / BO5 步骤生成与结算
 │   ├── share.js            # 战报文本生成
@@ -113,13 +116,25 @@ HTTPS 页面需要使用 `wss` 信令（`peersecure=1`）。刷新页面会退�
 | 字段 | 说明 |
 | --- | --- |
 | `brandMark` | 左上角徽标文字 |
-| `brandLogo` | 徽标图片地址，填写后替代文字徽标 |
+| `brandLogo` | 左上角 Logo 图片地址，可直接粘贴图床直链，留空则显示 `brandMark` 文字 |
 | `brandText` | 徽标右侧品牌名 |
+| `pageTitles` | 浏览器标签页标题，按游戏分别配置 |
 | `heroTitle1` / `heroTitle2` | 首页大标题两行，支持 HTML |
+| `heroTitles` | 各游戏首页标题，如 `{ valorant: ['...', '...'] }` |
+| `heroTitleNone` | 尚未选择游戏时的首页标题 |
 | `githubUrl` | GitHub 链接，留空则不显示入口 |
 | `githubLabel` | GitHub 入口文字 |
 
-### 现役地图 `js/active-maps.js`
+### 地图数据
+
+- **CS2**：`js/maps.js` 维护全部 21 张地图，`js/active-maps.js` 维护现役七图。
+- **VALORANT**：`js/valorant-maps.js` 同时维护全部 13 张地图与现役七图。
+
+现役地图数组顺序即展示顺序，`id` 必须与对应全部地图文件中的 `id` 一致。
+
+VALORANT 地图数据来源：[Riot 官方地图页](https://playvalorant.com/en-us/maps/) 与当前竞技图池（2026 年 V26 第六幕 / 13.08 补丁，7 张：Haven、Corrode、Bind、Sunset、Abyss、Lotus、Summit）。官方轮换新图时，更新 `js/valorant-maps.js` 中的 `MAPS` 与 `ACTIVE_IDS` 即可。
+
+### 现役地图 `js/active-maps.js`（CS2）
 
 ```js
 var ACTIVE_IDS = ['ancient', 'anubis', 'dust2', 'inferno', 'mirage', 'nuke', 'cache'];

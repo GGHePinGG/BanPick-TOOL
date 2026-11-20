@@ -4,7 +4,6 @@
   var CSBP = window.CSBP;
   var Store = CSBP.Store;
   var Net = CSBP.Net;
-  var MAPS = CSBP.Maps.MAPS;
   var app = document.getElementById('app');
   var toastHost = document.getElementById('toast');
 
@@ -26,6 +25,8 @@
   var joinCodeValue = '';
   var guestRollTicker = null;
   var guestRollTimer = null;
+  var autoNextTimer = null;
+  var autoNextKey = null;
   var disconnected = false;
   var manualOpen = false;
   var manualA = -1;
@@ -42,9 +43,18 @@
     brandText: 'BP ARENA',
     heroTitle1: '在线 <span class="grad">BP</span>',
     heroTitle2: '队长选人 · 地图博弈',
+    pageTitles: {},
     githubUrl: '',
     githubLabel: 'GitHub'
   }, CSBP.SiteConfig || {});
+
+  // 浏览器标题随所选游戏切换
+  function applyTitle(gameId) {
+    var game = gameId ? CSBP.Games.get(gameId) : null;
+    var titles = SITE.pageTitles || {};
+    document.title = titles[game ? game.id : 'none'] ||
+      (game ? game.label + ' BanPick TOOL' : 'CS2/Valorant BanPick TOOL');
+  }
 
   function applySiteConfig() {
     var mark = document.querySelector('[data-site="brand-mark"]');
@@ -207,19 +217,37 @@
       </div>`;
   }
 
+  function gamePicker() {
+    var currentGame = Store.state.config.game;
+    return CSBP.Games.list().map(function (g) {
+      var on = currentGame === g.id;
+      return '<button class="game-card' + (on ? ' on' : '') + '" type="button" data-action="select-game" data-game="' + g.id +
+        '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+        '<span class="gc-mark">' + esc(g.label) + '</span>' +
+        '<span class="gc-name">' + esc(g.name) + '</span>' +
+        '<span class="gc-check" aria-hidden="true">✓</span>' +
+        '</button>';
+    }).join('');
+  }
+
   function viewHome() {
     var supported = Net.supported();
+    var game = CSBP.Games.get(Store.state.config.game);
+    var titles = (game && SITE.heroTitles && SITE.heroTitles[game.id]) ||
+      (game ? [SITE.heroTitle1, SITE.heroTitle2] : (SITE.heroTitleNone || ['在线 <span class="grad">BanPick</span>', '选择游戏开始']));
     return `
     <section class="view home-view">
       <div class="hero">
-        <h1>${SITE.heroTitle1}<br />${SITE.heroTitle2}</h1>
+        <h1>${titles[0]}<br />${titles[1]}</h1>
+        <div class="game-picker" role="group" aria-label="选择游戏">${gamePicker()}</div>
+        ${game ? `
         <div class="hero-actions">
           <button class="btn primary lg" data-action="create-online" ${creatingRoom || !supported ? 'disabled' : ''}>${creatingRoom ? '创建中…' : '创建在线房间'} <span class="arrow">→</span></button>
           <button class="btn ghost lg" data-action="show-join" ${joiningRoom || !supported ? 'disabled' : ''}>加入房间</button>
           <button class="btn link lg" data-action="enter-lobby">单机模式</button>
         </div>
         ${!supported ? '<p class="hint warn-text">联机组件加载失败，请刷新页面或检查网络；单机模式仍可正常使用。</p>' : ''}
-        ${joinOpen ? joinPanel() : ''}
+        ${joinOpen ? joinPanel() : ''}` : ''}
       </div>
     </section>`;
   }
@@ -303,6 +331,7 @@
       <div class="view-head">
         <div><h2>房间配置</h2></div>
         <div class="head-actions">
+          <span class="head-meta">${esc(CSBP.CurrentGame.label)}</span>
           <button class="btn ghost sm" data-action="go-home">返回首页</button>
         </div>
       </div>
@@ -334,7 +363,7 @@
             <button class="btn tiny${s.config.poolMode === 'all' ? ' primary' : ''}" data-action="preset-pool" data-preset="all" ${guest ? 'disabled' : ''}>全部地图</button>
           </div>
           <div class="map-select-grid">
-            ${(s.config.poolMode === 'all' ? MAPS : CSBP.ActiveMaps.list()).map(function (m) {
+            ${(s.config.poolMode === 'all' ? CSBP.Maps.MAPS : CSBP.ActiveMaps.list()).map(function (m) {
               var on = s.config.pool.indexOf(m.id) >= 0;
               return '<button class="map-tile ' + (on ? 'on' : '') + '" data-action="toggle-map" data-map="' + m.id +
                 '" style="--h:' + m.hue + '" aria-pressed="' + (on ? 'true' : 'false') + '"' +
@@ -470,11 +499,12 @@
       if (roll.B === null || roll.B === undefined) waiting.push('B');
       actions = waiting.length
         ? '<span class="hint">等待 ' + waiting.join(' / ') + ' 队长在自己的设备上 Roll 点</span>'
-        : '<span class="hint">两位队长均已 Roll 点</span>';
+        : '<span class="hint">两位队长均已 Roll 点，3 秒后自动继续</span>';
     } else {
       var hasAny = (roll.A !== null && roll.A !== undefined) || (roll.B !== null && roll.B !== undefined);
       actions = '<button class="btn primary sm" data-action="roll-first"' + (rollAnimating ? ' disabled' : '') + '>' +
-        (hasAny ? '重新 Roll 点' : '开始 Roll 点') + '</button>';
+        (hasAny ? '重新 Roll 点' : '开始 Roll 点') + '</button>' +
+        (done ? '<span class="hint">3 秒后自动进入下一步</span>' : '');
     }
 
     return '<div class="roll-panel">' +
@@ -933,8 +963,40 @@
       : (info.side ? info.side + ' 队长' : '观战'));
   }
 
+  // Roll 点完成后 3 秒自动进入下一步（仅房主 / 本地模式推进，访客跟随房主状态）
+  function clearAutoNext() {
+    if (autoNextTimer) {
+      window.clearTimeout(autoNextTimer);
+      autoNextTimer = null;
+    }
+    autoNextKey = null;
+  }
+
+  function scheduleAutoNext(s) {
+    var eligible = !isGuest() && !rollAnimating && !rolling && s.phase === 'captains' && s.captains &&
+      s.config.rollFirst && rollDone(s.roll) && poolProblem(s) === '';
+    if (!eligible) {
+      clearAutoNext();
+      return;
+    }
+    var key = s.config.mode + '|' + s.captains.A + '|' + s.captains.B + '|' + s.roll.A + '|' + s.roll.B;
+    if (autoNextTimer && autoNextKey === key) return;
+    clearAutoNext();
+    autoNextKey = key;
+    autoNextTimer = window.setTimeout(function () {
+      autoNextTimer = null;
+      autoNextKey = null;
+      var cur = Store.state;
+      if (cur.phase !== 'captains' || !cur.config.rollFirst || !Store.rollDone(cur.roll)) return;
+      if (poolProblem(cur)) return;
+      if (cur.config.mode === 'random') startMapBP();
+      else startDraft();
+    }, 3000);
+  }
+
   function render() {
     var s = Store.state;
+    applyTitle(s.config.game);
     var body;
     switch (s.phase) {
       case 'lobby': body = viewLobby(s); break;
@@ -954,6 +1016,7 @@
       if (viewEl) viewEl.classList.add('animate');
       window.scrollTo(0, 0);
     }
+    scheduleAutoNext(s);
   }
 
   /* ------------------------------------------------------------------ */
@@ -1633,12 +1696,26 @@
     toast('已清空所有数据');
   }
 
+  function requireGame() {
+    if (Store.state.config.game) return true;
+    toast('请先选择游戏', 'warn');
+    return false;
+  }
+
   function handleAction(action, el) {
     switch (action) {
+      case 'select-game':
+        if (isOnline()) return;
+        joinOpen = false;
+        Store.setGame(el.getAttribute('data-game'));
+        render();
+        break;
       case 'create-online':
+        if (!requireGame()) return;
         createOnlineRoom();
         break;
       case 'show-join':
+        if (!requireGame()) return;
         joinOpen = true;
         render();
         window.setTimeout(function () {
@@ -1668,6 +1745,7 @@
           toast('请先离开当前房间', 'warn');
           return;
         }
+        if (!requireGame()) return;
         Store.setPhase('lobby');
         render();
         break;

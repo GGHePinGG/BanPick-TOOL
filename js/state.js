@@ -18,6 +18,7 @@
     return {
       phase: 'home',
       config: {
+        game: '',
         series: 1,
         mode: 'draft',
         rollFirst: false,
@@ -42,8 +43,15 @@
   function sanitize(raw) {
     if (!raw || typeof raw !== 'object') return null;
 
-    var base = createState();
     var cfg = raw.config && typeof raw.config === 'object' ? raw.config : {};
+
+    // 先按存档切换游戏，再校验图池；旧存档没有 game 字段时视为 CS2
+    var rawGame = typeof cfg.game === 'string' ? cfg.game : 'cs2';
+    var game = CSBP.Games.get(rawGame);
+    if (game) CSBP.Games.use(game.id);
+    var gameId = game ? game.id : '';
+
+    var base = createState();
 
     var validIds = {};
     CSBP.Maps.MAPS.forEach(function (m) { validIds[m.id] = true; });
@@ -171,6 +179,7 @@
     return {
       phase: phase,
       config: {
+        game: gameId,
         series: series,
         mode: cfg.mode === 'random' ? 'random' : 'draft',
         rollFirst: cfg.rollFirst === true,
@@ -268,6 +277,20 @@
     resetGames();
     state.phase = 'lobby';
     save();
+  }
+
+  // 选择游戏：重置图池与对局进度，回到首页
+  function setGame(id) {
+    var game = CSBP.Games.get(id);
+    if (!game || state.config.game === game.id) return false;
+    CSBP.Games.use(game.id);
+    state.config.game = game.id;
+    state.config.poolMode = 'active';
+    state.config.pool = game.active.IDS.slice();
+    resetGames();
+    state.phase = 'home';
+    save();
+    return true;
   }
 
   // 图池视图：现役七图（仅展示现役地图）/ 全部地图
@@ -586,6 +609,7 @@
     setPhase: setPhase,
     setSeries: setSeries,
     setMode: setMode,
+    setGame: setGame,
     setPool: setPool,
     setPoolMode: setPoolMode,
     setFirst: setFirst,

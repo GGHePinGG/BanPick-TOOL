@@ -13,7 +13,7 @@
     var capA = state.captains ? playerName(state, state.captains.A) : '未知';
     var capB = state.captains ? playerName(state, state.captains.B) : '未知';
 
-    lines.push('CS2 在线 BP 战报');
+    lines.push((CSBP.Games && CSBP.Games.current ? CSBP.Games.current().label : 'CS2') + ' 在线 BP 战报');
     lines.push('赛制：BO' + state.config.series + ' ｜ 图池：' + state.config.pool.length + ' 张');
     lines.push('--------------------------------');
 
